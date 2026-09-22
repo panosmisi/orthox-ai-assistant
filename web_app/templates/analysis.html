@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Preparing analysis{% endblock %}
+{% block content %}
+<section class="analysis-shell" data-target="/case/{{ case.demo_id }}">
+  <p class="eyebrow">Pipeline progress</p>
+  <h1>Preparing {{ case.display_title }}</h1>
+  <p class="lead small">Loading the locked review pipeline.</p>
+  <div class="analysis-progress-card" aria-label="Analysis progress">
+    <div class="progress-header">
+      <span data-progress-label>Starting review</span>
+      <strong data-progress-readout>0%</strong>
+    </div>
+    <div class="progress-track" aria-hidden="true">
+      <div class="progress-fill" data-progress-fill></div>
+    </div>
+    <p data-progress-current>Preparing the first stage.</p>
+  </div>
+  <div class="flow-status embedded" aria-label="Current workflow position">
+    <a class="flow-chip" href="/review">1. Start review</a>
+    <a class="flow-chip" href="/demo">2. Select case</a>
+    <span class="flow-chip active">3. Run stages</span>
+    <span class="flow-chip">4. Review result</span>
+  </div>
+  <ol class="stage-list" id="stageList">
+    <li>Searching for areas that may need closer review</li>
+    <li>Checking whether marked areas should remain visible</li>
+    <li>Removing obvious image-marker signals when appropriate</li>
+    <li>Estimating the anatomical region</li>
+    <li>Running a whole-image caution check when needed</li>
+    <li>Preparing the clinical-support report and evidence context</li>
+  </ol>
+  <p class="microcopy">Review-support output only.</p>
+</section>
+{% endblock %}

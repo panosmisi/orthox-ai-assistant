@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Safety{% endblock %}
+{% block content %}
+<section class="page-heading narrow app-workflow-heading">
+  <p class="eyebrow">Safety boundary</p>
+  <h1>What this tool does not decide</h1>
+  <div class="info-panel elevated-panel">
+    <p>
+      This academic prototype does not provide a diagnosis, treatment plan,
+      medication instruction, discharge decision, weight-bearing decision,
+      immobilisation decision, surgery recommendation, or follow-up clearance.
+    </p>
+    <p>
+      It presents AI-generated review cues and evidence context for clinician
+      review. Human clinical verification remains required.
+    </p>
+  </div>
+  <div class="method-grid">
+    <div class="soft-panel"><strong>Always review the image</strong><p>The original X-ray and full study remain the primary material.</p></div>
+    <div class="soft-panel"><strong>Always use clinical context</strong><p>Symptoms, examination, mechanism, and local protocol are outside the AI output.</p></div>
+    <div class="soft-panel"><strong>Never treat as all-clear</strong><p>No retained cue must not be interpreted as fracture exclusion.</p></div>
+  </div>
+</section>
+{% endblock %}

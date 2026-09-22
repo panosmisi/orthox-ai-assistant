@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Review X-ray{% endblock %}
+{% block content %}
+<section class="page-heading app-workflow-heading">
+  <p class="eyebrow">Review X-ray</p>
+  <h1>Start an AI-assisted X-ray review</h1>
+  <p>
+    Upload an X-ray image for a strict quality check before AI review. The app
+    confirms that the file is suitable before continuing to analysis.
+  </p>
+  <div class="page-kpis">
+    <span>Upload preflight</span>
+    <span>Quality gate first</span>
+    <span>Human verification required</span>
+  </div>
+</section>
+
+<section class="flow-status" aria-label="Current workflow position">
+  <span class="flow-chip active">1. Start review</span>
+  <span class="flow-chip">2. Select case</span>
+  <span class="flow-chip">3. Run stages</span>
+  <span class="flow-chip">4. Review result</span>
+</section>
+
+<section class="product-flow-grid">
+  <article class="workflow-card primary-workflow-card">
+    <span class="tag clinical-tag">Upload gate</span>
+    <h2>Upload X-ray image</h2>
+    <p>
+      The app first checks file type, resolution, brightness, contrast,
+      sharpness, orientation risk, and whether the file looks like a clean
+      radiograph rather than an ordinary photo. Failed images are not sent to analysis.
+    </p>
+    <form class="upload-form" action="/review" method="post" enctype="multipart/form-data">
+      <label class="upload-picker" for="xrayImage">
+        <span class="upload-picker-icon" aria-hidden="true">+</span>
+        <span>
+          <strong>Select X-ray image</strong>
+          <small data-file-name>PNG or JPEG, up to 15 MB</small>
+        </span>
+      </label>
+      <input id="xrayImage" name="xray_image" type="file" accept="image/png,image/jpeg" required data-file-input>
+      <p class="microcopy">Use an exported radiograph image. Native DICOM files are outside this V1 demo.</p>
+      <button type="submit">Run preflight check</button>
+    </form>
+  </article>
+
+  <article class="workflow-card">
+    <span class="tag">Fallback demo path</span>
+    <h2>Use locked demo cases</h2>
+    <p>
+      If you want to explore the system without uploading a file, use curated
+      example cases with completed AI review outputs.
+    </p>
+    <a class="button secondary" href="/demo">Open demo cases</a>
+  </article>
+</section>
+
+{% if upload_result %}
+<section class="upload-result-card {{ upload_result.status }}">
+  {% if upload_result.status == "rejected" %}
+  <div class="preflight-alert" role="alert">
+    <div class="preflight-alert-mark">!</div>
+    <div>
+      <strong>Image rejected before AI analysis</strong>
+      <p>{{ upload_result.message }}</p>
+      {% if upload_result.blocking %}
+      <ul>
+        {% for item in upload_result.blocking %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div>
+    <p class="eyebrow">Upload preflight result</p>
+    <h2>{{ upload_result.headline }}</h2>
+    <p>{{ upload_result.message }}</p>
+  </div>
+  {% if upload_result.preview_id %}
+  <div class="upload-preview">
+    <img src="/uploaded-preview/{{ upload_result.preview_id }}" alt="Uploaded X-ray preview">
+  </div>
+  {% endif %}
+
+  {% if upload_result.blocking %}
+  <section class="soft-panel">
+    <h3>Blocking issues</h3>
+    <ul class="clean-list do-not-list">
+      {% for item in upload_result.blocking %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if upload_result.warnings %}
+  <section class="soft-panel">
+    <h3>Warnings</h3>
+    <ul class="clean-list">
+      {% for item in upload_result.warnings %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section class="soft-panel">
+    <h3>Measured image quality</h3>
+    <dl class="quality-metrics">
+      {% for key, value in upload_result.metrics.items() %}
+      <div><dt>{{ key|replace("_", " ") }}</dt><dd>{{ value }}</dd></div>
+      {% endfor %}
+    </dl>
+  </section>
+
+  {% if upload_result.status == "accepted" %}
+  <div class="next-step-actions">
+    <a class="button" href="/upload/{{ upload_result.preview_id }}/analysis">Run live AI analysis</a>
+    <a class="button secondary" href="/demo">Compare with locked demo cases</a>
+  </div>
+  <p class="safety-note compact">Preflight acceptance means the file is suitable to continue to AI review. It does not mean the image is normal or diagnostic.</p>
+  {% else %}
+  <p class="safety-note compact">Rejected images should be re-exported or replaced before AI analysis. Garbage in, garbage out.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="workflow-strip">
+  <h2>Upload requirements</h2>
+  <ul class="clean-list requirements-list">
+    {% for item in upload_requirements %}
+    <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="workflow-strip">
+  <h2>Application flow</h2>
+  <ol class="flow-steps">
+    <li><strong>Input</strong><span>X-ray image or locked demo case</span></li>
+    <li><strong>Detection</strong><span>Localized review cue search</span></li>
+    <li><strong>Verification</strong><span>Checks retained visual cues</span></li>
+    <li><strong>Anatomy</strong><span>Body-region classification</span></li>
+    <li><strong>Report</strong><span>Clinical-support output and evidence context</span></li>
+  </ol>
+  <p class="microcopy">Review-support workflow only; clinical interpretation remains human-led.</p>
+</section>
+{% endblock %}

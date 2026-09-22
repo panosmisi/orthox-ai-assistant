@@ -1,0 +1,83 @@
+stage3:
+  local_only: true
+  paid_api_allowed: false
+  default_mode: clinician_support
+  version: stage3_mvp_template_v7
+  patient_friendly_note_enabled: true
+  max_patient_note_bullets: 4
+
+safety:
+  human_verification_required: true
+  clinician_review_required: true
+  forbidden_phrases:
+    - confirmed fracture
+    - definite fracture
+    - no fracture
+    - normal X-ray
+    - normal xray
+    - all clear
+    - diagnosis is
+    - apply cast
+    - treat with
+    - surgery required
+    - discharge
+    - no doctor needed
+    - you are fine
+    - definitely
+    - certainly
+
+query_builder:
+  max_queries: 8
+
+evidence:
+  pubmed_enabled: true
+  pubmed_trigger_policy: retained_candidate_only
+  pubmed_management_queries_only: true
+  pubmed_abstract_claims_enabled: true
+  pubmed_treatment_claims_enabled: true
+  pubmed_quality_gate_enabled: true
+  source_relevance_filter_enabled: true
+  keep_low_relevance_sources: false
+  guideline_registry_enabled: true
+  evidence_status_without_retrieval: local_curated_only
+  max_guideline_sources: 4
+  max_pubmed_results_per_query: 3
+  total_max_pubmed_sources: 8
+  max_pubmed_abstract_claims: 6
+  max_pubmed_treatment_claims: 4
+  max_clinician_summary_evidence_notes: 5
+  total_max_ranked_sources: 10
+  pubmed_cache_dir: runs/cache/stage3_pubmed
+  pubmed_offline_mode: true
+  pubmed_timeout_seconds: 15
+  pubmed_rate_limit_rps: 3.0
+
+llm_writer:
+  enabled: false
+  run_model: false
+  model_id_or_path: google/medgemma-4b-it
+  local_files_only: true
+  device: auto
+  torch_dtype: bfloat16
+  max_new_tokens: 192
+  temperature: 0.0
+  top_p: 1.0
+  trust_remote_code: false
+  attn_implementation: eager
+  prompt_mode: sections
+  compact_max_claims: 6
+  compact_max_sources: 6
+
+llm_management_writer:
+  enabled: true
+  run_model: false
+  model_id_or_path: google/medgemma-4b-it
+  local_files_only: true
+  device: auto
+  torch_dtype: auto
+  max_new_tokens: 420
+  temperature: 0.0
+  top_p: 1.0
+  trust_remote_code: false
+  attn_implementation: eager
+  require_torch_ge_2_6_for_medgemma: true

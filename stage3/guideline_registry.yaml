@@ -1,0 +1,150 @@
+guidelines:
+  - source_id: guideline_nice_ng38_non_complex_fractures
+    organization: NICE
+    title: "Fractures (non-complex): assessment and management"
+    url: "https://www.nice.org.uk/guidance/NG38/chapter/recommendations"
+    year: 2016
+    anatomy_scope:
+      - wrist_hand
+      - hand
+      - elbow
+      - forearm
+      - shoulder_upper_arm
+      - shoulder
+      - ankle_foot
+      - knee_lower_leg
+      - leg
+      - pelvis_hip_femur
+      - hip
+      - unknown
+    topic_scope:
+      - fracture assessment
+      - non-complex fracture
+      - emergency department
+      - orthopaedic clinic
+      - referral considerations
+    evidence_level: guideline_or_standard
+    notes: "Curated metadata only. Stage 3 does not scrape guideline content."
+
+  - source_id: guideline_nice_ng37_complex_fractures
+    organization: NICE
+    title: "Fractures (complex): assessment and management"
+    url: "https://www.nice.org.uk/guidance/ng37"
+    year: 2016
+    anatomy_scope:
+      - wrist_hand
+      - hand
+      - elbow
+      - forearm
+      - shoulder_upper_arm
+      - shoulder
+      - ankle_foot
+      - knee_lower_leg
+      - leg
+      - pelvis_hip_femur
+      - hip
+      - unknown
+    topic_scope:
+      - complex fracture
+      - open fracture
+      - neurovascular injury
+      - severe trauma
+      - specialist referral
+    evidence_level: guideline_or_standard
+    notes: "Used as general guideline metadata for complex/injury red-flag context."
+
+  - source_id: guideline_boa_boast_standards
+    organization: British Orthopaedic Association
+    title: "BOA Standards for Trauma and Orthopaedics (BOAST)"
+    url: "https://www.boa.ac.uk/publications/boa-standards-trauma-boasts/"
+    year: null
+    anatomy_scope:
+      - wrist_hand
+      - hand
+      - elbow
+      - forearm
+      - shoulder_upper_arm
+      - shoulder
+      - ankle_foot
+      - knee_lower_leg
+      - leg
+      - pelvis_hip_femur
+      - hip
+      - unknown
+    topic_scope:
+      - trauma standards
+      - orthopaedic standards
+      - referral standards
+      - fracture care standards
+    evidence_level: guideline_or_standard
+    notes: "Registry-level source for BOAST standards; individual BOAST documents can be added later."
+
+  - source_id: guideline_boa_boast_ankle_fractures
+    organization: British Orthopaedic Association
+    title: "BOAST: The Management of Ankle Fractures"
+    url: "https://www.boa.ac.uk/resource/boast-12-pdf.html"
+    year: 2016
+    anatomy_scope:
+      - ankle_foot
+      - leg
+    topic_scope:
+      - ankle fracture
+      - malleolar fracture
+      - orthopaedic trauma
+      - follow-up
+    evidence_level: guideline_or_standard
+    notes: "Curated metadata for ankle-fracture context; exact URL may require manual verification if BOA changes resource paths."
+
+  - source_id: guideline_acr_acute_hand_wrist_trauma
+    organization: American College of Radiology
+    title: "ACR Appropriateness Criteria: Acute Hand and Wrist Trauma"
+    url: "https://acsearch.acr.org/docs/69418/narrative/"
+    year: null
+    anatomy_scope:
+      - wrist_hand
+      - hand
+      - forearm
+    topic_scope:
+      - hand trauma
+      - wrist trauma
+      - radiography
+      - negative or equivocal radiographs
+      - scaphoid
+      - malalignment
+    evidence_level: guideline_or_standard
+    notes: "Curated metadata for hand/wrist imaging context. Stage 3 uses this for review prompts only, not for automatic imaging orders."
+
+  - source_id: guideline_ottawa_ankle_rules
+    organization: NICE context / Ottawa ankle and foot rules
+    title: "Ottawa ankle and foot rule context for suspected ankle injuries"
+    url: "https://www.nice.org.uk/guidance/NG38/chapter/recommendations"
+    year: 2016
+    anatomy_scope:
+      - ankle_foot
+    topic_scope:
+      - ankle
+      - foot
+      - Ottawa ankle rules
+      - malleolar tenderness
+      - navicular
+      - fifth metatarsal
+      - weight bearing
+      - x-ray decision rule
+    evidence_level: guideline_or_standard
+    notes: "NICE NG38 recommends Ottawa ankle and foot rules for determining whether X-ray is needed in suspected ankle injuries. Stage 3 uses this as clinical-review context only."
+
+  - source_id: guideline_ottawa_knee_rules
+    organization: NICE context / Ottawa knee rules
+    title: "Ottawa knee rule context for suspected knee injuries"
+    url: "https://www.nice.org.uk/guidance/NG38/chapter/recommendations"
+    year: 2016
+    anatomy_scope:
+      - knee_lower_leg
+    topic_scope:
+      - knee
+      - Ottawa knee rules
+      - weight bearing
+      - knee x-ray decision rule
+      - suspected knee fracture
+    evidence_level: guideline_or_standard
+    notes: "NICE NG38 recommends Ottawa knee rules for determining whether X-ray is needed in suspected knee injuries. Stage 3 uses this as clinical-review context only."

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Method{% endblock %}
+{% block content %}
+<section class="page-heading narrow app-workflow-heading">
+  <p class="eyebrow">Method</p>
+  <h1>Locked multi-stage review pipeline</h1>
+  <p>
+    This prototype presents a staged academic AI system for X-ray review:
+    visual cue detection, verification, anatomy classification, image-level
+    caution, PubMed/RAG-supported management context, and explainability.
+  </p>
+  <div class="info-panel elevated-panel">
+    <h2>V1 app boundary</h2>
+    <p>
+      Curated demo cases use locked benchmark outputs. Uploaded images use the
+      live research path and are shown as advisory review support only.
+    </p>
+  </div>
+  <div class="method-grid">
+    <div class="soft-panel"><strong>Detection</strong><p>Finds localized review cues when the locked pipeline retains them.</p></div>
+    <div class="soft-panel"><strong>Verification</strong><p>Checks whether marked areas should remain visible for review.</p></div>
+    <div class="soft-panel"><strong>Context</strong><p>Adds anatomy, safety, explainability, and evidence-linked support.</p></div>
+  </div>
+</section>
+{% endblock %}

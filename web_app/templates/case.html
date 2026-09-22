@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+{% block title %}{{ case.display_title }}{% endblock %}
+{% block content %}
+<section class="result-header">
+  <div>
+    <p class="eyebrow">{{ case.demo_id }} / {{ case.image_id }}</p>
+    <h1>{{ case.display_title }}</h1>
+    <p>{% if external_notice %}Advisory AI review support. Human verification is required.{% else %}{{ case.display_subtitle }}{% endif %}</p>
+    <span class="case-mode-badge">{{ provenance.badge_label }}</span>
+  </div>
+  <div class="result-actions header-actions">
+    <a href="/review">New review</a>
+    <a href="/demo">Demo cases</a>
+  </div>
+</section>
+
+{% if limited_quality_upload %}
+<section class="limited-quality-banner" role="note">
+  <strong>Limited-quality input</strong>
+  <span>This uploaded radiograph was accepted with caution. AI output may be incomplete and must not be treated as reassurance.</span>
+</section>
+{% endif %}
+
+<section class="at-a-glance" aria-label="Result at a glance">
+  <article>
+    <span>AI review status</span>
+    <strong>{{ clinical_overview.takeaway_label }}</strong>
+    <p>{{ clinical_overview.priority }}</p>
+  </article>
+  <article>
+    <span>Anatomy context</span>
+    <strong>{{ anatomy.selected_display_label or "Unavailable" }}</strong>
+    <p>{% if anatomy.selected_support_percent %}{{ "%.1f"|format(anatomy.selected_support_percent) }}% anatomy support{% else %}Support unavailable{% endif %}</p>
+  </article>
+  <article>
+    <span>Marked areas</span>
+    <strong>{{ candidate_regions|length }}</strong>
+    <p>{% if candidate_regions|length == 1 %}One area retained for review{% elif candidate_regions|length > 1 %}Multiple areas retained for review{% else %}No localized mark retained{% endif %}</p>
+  </article>
+  <article>
+    <span>Important boundary</span>
+    <strong>{{ clinical_overview.boundary_label }}</strong>
+    <p>Human clinical verification required</p>
+  </article>
+</section>
+
+<section class="viewer-summary-grid single-viewer">
+  <div class="viewer-card">
+    <div class="viewer-toolbar">
+      <button class="small-button" data-toggle-bbox>Review boxes</button>
+      <button class="small-button" data-zoom-out>Zoom out</button>
+      <span class="zoom-readout" data-zoom-readout>100%</span>
+      <button class="small-button" data-zoom-in>Zoom in</button>
+      <button class="small-button" data-zoom-reset>Reset view</button>
+    </div>
+    <div class="image-frame" id="imageFrame">
+      <div class="image-canvas" data-image-canvas>
+        <img data-review-image src="{{ image_url }}" alt="X-ray image {{ case.image_id }}">
+        {% if candidate_bboxes %}
+        {% for box in candidate_bboxes %}
+        <div
+          class="bbox{% if not loop.first %} secondary{% endif %}"
+          data-bbox
+          data-bbox-id="{{ box.candidate_id }}"
+          style="left: {{ box.left }}%; top: {{ box.top }}%; width: {{ box.width }}%; height: {{ box.height }}%;"
+          aria-label="Marked area {{ box.index }}"
+        >
+          <span>{{ box.index }}</span>
+        </div>
+        {% endfor %}
+        {% elif bbox_percent %}
+        <div class="bbox" data-bbox data-bbox-id="C1" style="left: {{ bbox_percent.left }}%; top: {{ bbox_percent.top }}%; width: {{ bbox_percent.width }}%; height: {{ bbox_percent.height }}%;"><span>1</span></div>
+        {% endif %}
+      </div>
+    </div>
+    <p class="microcopy">Overlays are visual aids only.</p>
+  </div>
+</section>
+
+<section class="tabs" data-tabs>
+  <div class="tab-list" role="tablist">
+    <button class="tab-button active" data-tab="overview">Overview</button>
+    <button class="tab-button" data-tab="image">Marked Areas</button>
+    <button class="tab-button" data-tab="report">Clinical Context</button>
+    <button class="tab-button optional-tab" data-tab="evidence">Evidence</button>
+    <button class="tab-button optional-tab" data-tab="sources">Sources</button>
+    <button class="tab-button optional-tab" data-tab="export">Export</button>
+  </div>
+
+  <div class="tab-panel active" data-panel="overview">
+    <h2>Review Overview</h2>
+    <div class="clinical-summary">
+      <span class="priority-pill">{{ clinical_overview.priority }}</span>
+      <p class="headline">{{ clinical_overview.title }}</p>
+      <p>{{ clinical_overview.plain_summary }}</p>
+    </div>
+
+    <div class="two-column">
+      <section class="soft-panel">
+        <h3>What to review first</h3>
+        <ul class="clean-list">
+          {% for item in clinical_overview.review_first %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+      <section class="soft-panel">
+        <h3>What this does not mean</h3>
+        <ul class="clean-list do-not-list">
+          {% for item in clinical_overview.does_not_mean %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    </div>
+
+    <div class="two-column">
+      {% if clinical_overview.clinical_inputs %}
+      <section class="soft-panel">
+        <h3>Clinical information still needed</h3>
+        <ul class="clean-list">
+          {% for item in clinical_overview.clinical_inputs %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+      {% if overview_model_cards %}
+      <section class="soft-panel">
+        <h3>AI confidence signals</h3>
+        <div class="badge-row">
+          {% for card in overview_model_cards %}
+          <span class="metric-badge">{{ card.label }}: {{ card.support_text or card.support_level_label }}</span>
+          {% endfor %}
+        </div>
+        <p class="microcopy">These values help prioritize review. They do not diagnose or rule out injury.</p>
+      </section>
+      {% endif %}
+    </div>
+
+    <p class="safety-note compact">Human clinical review is required; this prototype does not make a diagnosis or treatment plan.</p>
+  </div>
+
+  <div class="tab-panel" data-panel="image">
+    <h2>Image Review</h2>
+    <div class="clinical-summary">
+      <span class="priority-pill">{% if image_review.has_bbox %}Marked area available{% else %}No marked area{% endif %}</span>
+      <p class="headline">Visual review guidance</p>
+      <p>{{ image_review.summary }}</p>
+    </div>
+
+    <div class="two-column">
+      <section class="soft-panel">
+        <h3>How to inspect this image</h3>
+        <p>{{ image_review.primary_instruction }}</p>
+        <ul class="clean-list">
+          {% for item in image_review.viewer_notes %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+      <section class="soft-panel">
+        <h3>Viewer tools</h3>
+        <ul class="clean-list">
+          <li>Use zoom in/out for closer inspection of subtle areas.</li>
+          <li>Use reset view to return to the fitted image.</li>
+          <li>{% if image_review.has_bbox %}Use the review box to compare the marked area with the original image.{% else %}No review box is shown because the system did not retain a reliable localized cue.{% endif %}</li>
+        </ul>
+      </section>
+    </div>
+
+    {% if image_review.cues %}
+    <section class="report-section">
+      <h3>Marked areas for review</h3>
+      <div class="candidate-list">
+        {% for cue in image_review.cues %}
+        <article class="compact-card cue-card{% if loop.first %} active{% endif %}" data-cue-target="{{ cue.candidate_id }}" tabindex="0">
+          <strong>{{ cue.title }}</strong>
+          <p>{{ cue.support_text }} &middot; review signal only.</p>
+          <p>{{ cue.plain_note }}</p>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% else %}
+    <section class="report-section">
+      <h3>Marked areas for review</h3>
+      <p>No reliable marked area was retained for this case. The system must not display a fake marker.</p>
+    </section>
+    {% endif %}
+  </div>
+
+  <div class="tab-panel" data-panel="report">
+    <h2>Clinical-Support Report</h2>
+    <div class="clinical-summary">
+      <span class="priority-pill">Clinician review support</span>
+      <p class="headline">Structured review context</p>
+      <p>{{ clinical_support_report.status_text }}</p>
+    </div>
+
+    <section class="report-section">
+      <h3>Review focus</h3>
+      <p>{{ clinical_support_report.focus_sentence }}</p>
+      {% if clinical_support_report.localizers %}
+      <ul class="clean-list">
+        {% for item in clinical_support_report.localizers %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </section>
+
+    <section class="report-section">
+      <h3>Anatomy context</h3>
+      <p>{{ clinical_support_report.anatomy_sentence }}</p>
+    </section>
+
+    {% if clinical_support_report.red_flags %}
+    <section class="report-section">
+      <h3>Red flags / escalation triggers</h3>
+      <ul class="clean-list">
+        {% for item in clinical_support_report.red_flags %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    <section class="report-section">
+      <h3>AI must not decide</h3>
+      <p>{{ clinical_support_report.must_not_decide|join(", ") }}.</p>
+    </section>
+  </div>
+
+  <div class="tab-panel" data-panel="evidence">
+    <h2>Evidence-linked management context for clinician review</h2>
+    <p class="microcopy">Evidence context supports clinician review; it is not patient-specific advice.</p>
+    <p>{{ evidence_context.summary }}</p>
+
+    {% if evidence_context.direction_bullets %}
+    <section class="report-section">
+      <h3>How to use this context</h3>
+      <ul class="clean-list">
+        {% for item in evidence_context.direction_bullets %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    {% if evidence_context.evidence_items %}
+    <section class="report-section">
+      <h3>Source-backed considerations</h3>
+      <div class="candidate-list">
+      {% for item in evidence_context.evidence_items %}
+      <article class="compact-card">
+        <strong>{{ item.category }}</strong>
+        <p>{{ item.text }}</p>
+        {% if item.rationale %}
+        <p class="muted">{{ item.rationale }}</p>
+        {% endif %}
+        {% if item.source_ids %}
+        <p class="source-inline">Sources: {{ item.source_ids|join(", ") }}</p>
+        {% endif %}
+        {% if item.boundary %}
+        <p class="muted">{{ item.boundary }}</p>
+        {% endif %}
+      </article>
+      {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </div>
+
+  <div class="tab-panel" data-panel="sources">
+    <h2>Sources</h2>
+    {% if source_cards %}
+      {% for source in source_cards %}
+      <article class="source-card">
+        <strong>{{ source.title or source.id }}</strong>
+        <p>{{ source.source_type or "Evidence source" }}{% if source.url %} &middot; <a href="{{ source.url }}" target="_blank" rel="noreferrer">Open source</a>{% endif %}</p>
+        <p class="muted">
+          {% if source.limitations %}{{ source.limitations|join("; ") }}{% else %}Limitations should be reviewed by a clinician.{% endif %}
+        </p>
+      </article>
+      {% endfor %}
+    {% else %}
+    <p>No source cards were available in the app contract for this case.</p>
+    {% endif %}
+  </div>
+
+  <div class="tab-panel" data-panel="export">
+    <h2>Export</h2>
+    <div class="export-actions">
+      <button class="button" type="button" data-print-report>Print / Save as PDF</button>
+      <button class="button secondary" type="button" data-copy-report>Copy report text</button>
+      <span class="copy-status" data-copy-status aria-live="polite"></span>
+    </div>
+    <p class="microcopy">Export includes clinical-facing review context only. Developer audit data is kept out of the user report.</p>
+    <template id="reportCopyTemplate">
+AI-assisted X-ray review report
+Case: {{ case.image_id }}
+Run type: {{ provenance.mode_label }}
+Image source: {{ provenance.details[1].value }}
+Contract: {{ provenance.details[2].value }}
+Pipeline: {{ provenance.details[3].value }}
+Validator: {{ provenance.details[4].value }}
+Viewed: {{ provenance.details[5].value }}
+
+Review overview
+Status: {{ clinical_overview.takeaway_label }}
+Priority: {{ clinical_overview.priority }}
+Summary: {{ clinical_overview.plain_summary }}
+Anatomy: {{ anatomy.selected_display_label or "Unavailable" }}{% if anatomy.selected_support_percent %} ({{ "%.1f"|format(anatomy.selected_support_percent) }}% anatomy support){% endif %}
+Marked areas retained: {{ candidate_regions|length }}
+
+What to review first:
+{% for item in clinical_overview.review_first %}- {{ item }}
+{% endfor %}
+Clinical information still needed:
+{% if clinical_overview.clinical_inputs %}
+{% for item in clinical_overview.clinical_inputs %}- {{ item }}
+{% endfor %}
+{% else %}- Not available in the submitted image alone.
+{% endif %}
+Clinical-support context
+{{ clinical_support_report.status_text }}
+Review focus: {{ clinical_support_report.focus_sentence }}
+Anatomy context: {{ clinical_support_report.anatomy_sentence }}
+
+Red flags / escalation triggers:
+{% if clinical_support_report.red_flags %}
+{% for item in clinical_support_report.red_flags %}- {{ item }}
+{% endfor %}
+{% else %}- No red-flag list was generated for this case.
+{% endif %}
+AI must not decide: {{ clinical_support_report.must_not_decide|join(", ") }}.
+
+Evidence-linked management context
+{{ evidence_context.summary }}
+{% if evidence_context.evidence_items %}
+{% for item in evidence_context.evidence_items %}- {{ item.category }}: {{ item.text }}{% if item.source_ids %} Sources: {{ item.source_ids|join(", ") }}.{% endif %}
+{% endfor %}
+{% else %}- No evidence-linked management items were attached to this case.
+{% endif %}
+
+Boundary
+This is an academic AI review-support prototype. It is not a diagnosis, not a treatment plan, and not patient-specific medical advice.
+    </template>
+  </div>
+</section>
+
+<section class="advanced-result-panels">
+  <details class="advanced-panel">
+    <summary>How the AI reached this result</summary>
+    <div class="advanced-panel-body">
+      {% if explainability_view.short_explanation %}
+      <p>{{ explainability_view.short_explanation }}</p>
+      {% if explainability_view.pipeline_flow %}
+      <ol class="clean-list numbered">
+        {% for step in explainability_view.pipeline_flow %}
+        <li>{{ step }}</li>
+        {% endfor %}
+      </ol>
+      {% endif %}
+      {% if explainability_view.stage_summaries %}
+      <div class="candidate-list">
+        {% for stage in explainability_view.stage_summaries %}
+        <article class="compact-card">
+          <strong>{{ stage.stage_display_label }}</strong>
+          <p>{{ stage.user_explanation or stage.output }}</p>
+          {% if stage.limitations %}
+          <p class="muted">{{ stage.limitations[0] }}</p>
+          {% endif %}
+        </article>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <p class="microcopy">{{ explainability_view.bottom_line }}</p>
+      {% else %}
+      <p>Explainability payload unavailable for this case.</p>
+      {% endif %}
+    </div>
+  </details>
+
+</section>
+{% endblock %}

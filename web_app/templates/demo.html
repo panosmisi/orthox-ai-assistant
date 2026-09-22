@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Demo cases{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">Curated V1 gallery</p>
+  <h1>Demo X-ray cases</h1>
+  <p>
+    Six representative locked cases covering localized review cues, image-level
+    caution without a box, and limited screening output.
+  </p>
+  <div class="page-kpis">
+    <span>Locked benchmark examples</span>
+    <span>Clinical-style report output</span>
+    <span>Human review required</span>
+  </div>
+</section>
+
+<section class="flow-status" aria-label="Current workflow position">
+  <a class="flow-chip" href="/review">1. Start review</a>
+  <span class="flow-chip active">2. Select case</span>
+  <span class="flow-chip">3. Run stages</span>
+  <span class="flow-chip">4. Review result</span>
+</section>
+
+<section class="case-grid">
+  {% for item in cases %}
+  <article class="case-card">
+    <div class="thumb-wrap">
+      <img src="/image/{{ item.demo_id }}" alt="X-ray thumbnail for {{ item.image_id }}">
+    </div>
+    <div class="case-card-body">
+      <div class="case-card-topline">
+        <span class="status-pill {{ item.status_class }}">{{ item.gallery_group }}</span>
+        <span class="case-id">{{ item.demo_id }}</span>
+      </div>
+      <h2>{{ item.display_title }}</h2>
+      <p class="muted">{{ item.display_subtitle }}</p>
+      <dl class="mini-meta">
+        <div><dt>Case</dt><dd>{{ item.demo_id }} / {{ item.image_id }}</dd></div>
+        <div><dt>Anatomy</dt><dd>{{ item.anatomy }}</dd></div>
+      </dl>
+      <p class="reason">{{ item.presentation_reason }}</p>
+      <a class="button" href="/case/{{ item.demo_id }}/analysis">Review case</a>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,542 @@
+{% extends "base.html" %}
+{% block title %}Problem Description{% endblock %}
+{% block content %}
+<section class="page-heading app-workflow-heading">
+  <p class="eyebrow">Problem Description Mode</p>
+  <h1>Clinical context from symptoms</h1>
+  <p>
+    Describe the injury or symptoms in detail. The app checks whether there is
+    enough useful information, then prepares cautious clinical review support.
+  </p>
+  <div class="page-kpis">
+    <span>Symptom review</span>
+    <span>Clinician support</span>
+    <span>Evidence context</span>
+  </div>
+</section>
+
+{% if analysis and analysis.status == "rejected" %}
+<section class="upload-result-card rejected">
+  <div class="preflight-alert" role="alert">
+    <div class="preflight-alert-mark">!</div>
+    <div>
+      <strong>{{ analysis.headline }}</strong>
+      <p>{{ analysis.message }}</p>
+      <p class="microcopy">{{ analysis.example }}</p>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if not analysis or analysis.status == "rejected" %}
+<section class="problem-intake-grid">
+  <article class="workflow-card primary-workflow-card">
+    <span class="tag clinical-tag">Clinical intake</span>
+    <h2>Describe the problem</h2>
+    <div class="input-guide">
+      <strong>Include these details when possible:</strong>
+      <ol>
+        <li>General body area, for example arm, leg, hand, or foot.</li>
+        <li>Specific location, for example wrist, ankle, elbow, knee, or shoulder.</li>
+        <li>How it happened, for example fall, twist, impact, sport, or traffic injury.</li>
+        <li>When it happened and whether symptoms changed over time.</li>
+        <li>Main symptoms, for example pain, swelling, bruising, or reduced movement.</li>
+        <li>Current function, for example grip, walk, bear weight, or move the joint.</li>
+        <li>Numbness, tingling, color change, coldness, or reduced sensation, even if absent.</li>
+        <li>Visible deformity, abnormal alignment, bleeding, cut, or open wound, even if absent.</li>
+      </ol>
+    </div>
+    <form class="problem-form" action="/problem-description" method="post" data-problem-form>
+      <textarea
+        name="description"
+        rows="8"
+        required
+        placeholder="Example: I fell while playing basketball 2 hours ago. My wrist hurts, it is swollen, and I cannot grip objects normally. I do not have numbness."
+      >{{ description }}</textarea>
+      <p class="microcopy">This mode only handles health-related musculoskeletal injury or symptom descriptions.</p>
+      <button type="submit" data-problem-submit>Analyze description</button>
+      <div class="problem-loading-card" data-problem-loading aria-live="polite" aria-hidden="true">
+        <div class="problem-loading-topline">
+          <span class="loading-pulse"></span>
+          <div>
+            <strong>Building the clinical support response</strong>
+            <p data-problem-loading-message>Checking whether the description contains enough clinical context.</p>
+          </div>
+          <span class="problem-loading-percent" data-problem-loading-percent>0%</span>
+        </div>
+        <div class="problem-loading-track">
+          <span data-problem-loading-fill></span>
+        </div>
+        <div class="problem-loading-live">
+          <span class="loading-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span data-problem-loading-live>Starting review</span>
+        </div>
+        <ol class="problem-loading-steps" data-problem-loading-steps>
+          <li class="active">Reading details</li>
+          <li>Evidence search</li>
+          <li>Drafting response</li>
+          <li>Safety check</li>
+        </ol>
+      </div>
+    </form>
+  </article>
+
+  <article class="workflow-card">
+    <h2>What this mode does</h2>
+    <ul class="clean-list">
+      <li>Identifies the body area, injury pattern, symptoms, and timing.</li>
+      <li>Highlights warning signs that need urgent human review.</li>
+      <li>Asks for only the most useful missing detail.</li>
+      <li>Adds evidence context when the description is specific enough.</li>
+    </ul>
+  </article>
+</section>
+{% endif %}
+
+{% if analysis and analysis.status != "rejected" %}
+<section class="problem-result-shell">
+  <div class="clinical-summary">
+    <span class="priority-pill">Clinical support summary</span>
+    <p class="headline">{{ analysis.headline }}</p>
+    <p>{{ analysis.summary }}</p>
+  </div>
+
+  {% if analysis.clinical_consistency and analysis.clinical_consistency.status != "pass" %}
+  <section class="red-flag-panel">
+    <h2>Structured extraction consistency check</h2>
+    <p class="headline">{{ analysis.clinical_consistency.message }}</p>
+    <div class="candidate-list">
+      {% for issue in analysis.clinical_consistency.issues %}
+      <article class="compact-card">
+        <strong>Consistency issue</strong>
+        <p>{{ issue }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if analysis.red_flags %}
+  <section class="red-flag-panel">
+    <h2>Red flags / escalation triggers</h2>
+    {% if analysis.red_flag_escalation_message %}
+    <p class="headline">{{ analysis.red_flag_escalation_message }}</p>
+    {% endif %}
+    <div class="candidate-list">
+      {% for item in analysis.red_flags %}
+      <article class="compact-card">
+        <strong>{{ item.label }}</strong>
+        <p>{{ item.message }}</p>
+        {% if item.why_triggered %}
+        <p class="source-inline">{{ item.why_triggered }}</p>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="clinical-direction-panel">
+    <span class="priority-pill">{{ analysis.clinical_direction.headline }}</span>
+    <h2>{{ analysis.clinical_direction.most_compatible }}</h2>
+    <p>{{ analysis.clinical_direction.plain_language }}</p>
+    <div class="direction-flow-grid">
+      <article class="next-step-card">
+        <h3>Recommended next step</h3>
+        <p class="recommendation-emphasis"><strong>{{ analysis.clinical_direction.action.level }} - {{ analysis.clinical_direction.action.title }}</strong></p>
+        <p>{{ analysis.clinical_direction.action.summary }}</p>
+      </article>
+      <article>
+        <h3>Clinical reasoning for this level</h3>
+        {% if analysis.clinical_direction.level_rationale %}
+        <p>{{ analysis.clinical_direction.level_rationale }}</p>
+        {% endif %}
+        {% if analysis.clinical_direction.support_strength %}
+        <p><strong>Clinical support strength: {{ analysis.clinical_direction.support_strength.level }}</strong></p>
+        {% if analysis.clinical_direction.support_strength.limitation %}
+        <p class="microcopy">{{ analysis.clinical_direction.support_strength.limitation }}</p>
+        {% endif %}
+        {% endif %}
+        <ul class="clean-list">
+          {% for item in analysis.clinical_direction.supporting_factors %}
+          <li>{{ item }}</li>
+          {% endfor %}
+          {% for item in analysis.clinical_direction.uncertainty[:1] %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    </div>
+    <div class="direction-flow-grid">
+      <article>
+        <h3>Other possibilities still worth reviewing</h3>
+        <ul class="clean-list">
+          {% for item in analysis.clinical_direction.alternatives %}
+          <li><strong>{{ item.label }}:</strong> {{ item.text }} <span class="muted">{{ item.reason }}</span></li>
+          {% endfor %}
+        </ul>
+      </article>
+      <article>
+        <h3>What to watch for</h3>
+        <ul class="clean-list">
+          {% for item in analysis.clinical_direction.watch_for %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    </div>
+    <p class="safety-note compact">{{ analysis.clinical_direction.closing }}</p>
+  </section>
+
+  <section class="report-section">
+    <h2>{{ analysis.follow_up_display.title }}</h2>
+    <article class="soft-panel">
+      {% if analysis.follow_up_questions %}
+      <ul class="clean-list">
+        {% for question in analysis.follow_up_questions %}
+        <li>
+          {{ question.question }}
+          <p class="microcopy">{{ question.reason }}</p>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>{{ analysis.follow_up_display.empty_message }}</p>
+      {% endif %}
+    </article>
+  </section>
+
+  <details class="advanced-panel">
+    <summary>1. Structured intake and extraction confidence</summary>
+    <div class="advanced-panel-body">
+      <section class="intake-quality-panel compact-intake-quality">
+        <div>
+          <span class="priority-pill">{{ analysis.input_quality.level }}</span>
+          <h2>Intake checklist coverage: {{ analysis.input_quality.score }}/{{ analysis.input_quality.total }} fields mentioned</h2>
+          <p>{{ analysis.input_quality.message }}</p>
+          <p class="microcopy">This score describes how complete the written description is. It is not a probability of fracture or clinical severity.</p>
+          <p class="microcopy">Clinical evidence remains incomplete without examination and imaging.</p>
+        </div>
+        <div class="quality-progress" aria-label="Input completeness {{ analysis.input_quality.percent }} percent">
+          <div class="quality-progress-track">
+            <span style="width: {{ analysis.input_quality.percent }}%"></span>
+          </div>
+          <strong>{{ analysis.input_quality.score }}/{{ analysis.input_quality.total }}</strong>
+        </div>
+      </section>
+      <h3>Extracted clinical fields</h3>
+      <div class="intake-card-grid">
+        {% for item in analysis.extracted_cards %}
+        <article class="compact-card">
+          <span class="muted">{{ item.label }}</span>
+          <strong>{{ item.value }}</strong>
+        </article>
+        {% endfor %}
+      </div>
+      <h3>Extraction confidence</h3>
+      <div class="intake-card-grid">
+        {% for item in analysis.extraction_confidence %}
+        <article class="compact-card">
+          <span class="muted">{{ item.field }}</span>
+          <strong>{{ item.confidence }}</strong>
+          <p>{{ item.basis }}</p>
+        </article>
+        {% endfor %}
+      </div>
+      <p class="microcopy">These confidence labels describe information extraction from text, not clinical certainty.</p>
+      {% if analysis.extraction_evidence %}
+      <details class="inline-details">
+        <summary>Show extracted source phrases</summary>
+        <p class="microcopy">These phrases show where key structured findings came from. They support auditability; they are not clinical proof.</p>
+        <div class="intake-card-grid">
+          {% for item in analysis.extraction_evidence %}
+          <article class="compact-card">
+            <span class="muted">{{ item.concept }} &middot; {{ item.status }}</span>
+            <strong>{{ item.matched_keyword }}</strong>
+            {% if item.source_text %}
+            <p>{{ item.source_text }}</p>
+            {% endif %}
+          </article>
+          {% endfor %}
+        </div>
+      </details>
+      {% endif %}
+    </div>
+  </details>
+
+  <details class="advanced-panel">
+    <summary>2. Clinical reasoning and uncertainty audit</summary>
+    <div class="advanced-panel-body">
+      <h3>Clinical considerations for review</h3>
+      <p class="microcopy">These are review prompts generated from the extracted facts above. They are not final diagnoses.</p>
+      <div class="candidate-list">
+        {% for item in analysis.clinical_considerations %}
+        <article class="compact-card">
+          <strong>{{ item.condition }}</strong>
+          <p><span class="source-inline">{{ item.relevance }}</span></p>
+          <p>{{ item.why_relevant }}</p>
+        </article>
+        {% endfor %}
+      </div>
+      <h3>Evidence completeness</h3>
+      <p class="headline">{{ analysis.evidence_completeness.level }}</p>
+      <div class="two-column">
+        <article class="soft-panel">
+          <h3>Available from text</h3>
+          <ul class="clean-list">
+            {% for item in analysis.evidence_completeness.available %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+        <article class="soft-panel">
+          <h3>Still missing / uncertainty drivers</h3>
+          <ul class="clean-list">
+            {% for item in analysis.evidence_completeness.missing %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+      </div>
+      <article class="soft-panel">
+        <h3>AI reasoning summary</h3>
+        <p>{{ analysis.clinical_reasoning.summary }}</p>
+      </article>
+      <p class="microcopy">This is structured review reasoning, not a final clinical decision or treatment decision.</p>
+    </div>
+  </details>
+
+  <details class="advanced-panel evidence-panel">
+    <summary>3. PubMed evidence sources and source-linked context</summary>
+    <div class="advanced-panel-body">
+      <div class="clinical-summary compact-summary evidence-summary-card">
+        <span class="priority-pill">{{ analysis.evidence_pack.status }}</span>
+        {% if analysis.evidence_pack.readiness %}
+        <p>{{ analysis.evidence_pack.readiness.message }}</p>
+        {% if analysis.evidence_pack.readiness.blockers %}
+        <ul class="clean-list">
+          {% for blocker in analysis.evidence_pack.readiness.blockers %}
+          <li>{{ blocker }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% endif %}
+        {% if analysis.evidence_pack.query %}
+        <details class="inline-details">
+          <summary>Show structured PubMed query</summary>
+          <p class="microcopy">{{ analysis.evidence_pack.query }}</p>
+        </details>
+        {% endif %}
+      </div>
+      {% if analysis.evidence_pack.synthesis %}
+      <article class="soft-panel evidence-synthesis-card">
+        <h3>{{ analysis.evidence_pack.synthesis.headline }}</h3>
+        <ul class="clean-list">
+          {% for item in analysis.evidence_pack.synthesis.bullets %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+        {% if analysis.evidence_pack.synthesis.claims %}
+        <h3>Source-linked statements</h3>
+        <div class="candidate-list">
+          {% for claim in analysis.evidence_pack.synthesis.claims %}
+          <article class="compact-card">
+            <p>{{ claim.claim }}</p>
+            <p>
+              <span class="source-inline">{{ claim.case_match }}</span>
+              <span class="source-inline">{{ claim.evidence_level }}</span>
+              <span class="source-inline">{{ claim.source_ids|join(", ") }}</span>
+            </p>
+            <p class="muted">{{ claim.limitation }}</p>
+          </article>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </article>
+      {% endif %}
+      <div class="candidate-list">
+        {% for item in analysis.main_evidence_cards %}
+        <article class="source-card source-card-premium">
+          <div class="source-card-header">
+            <span class="source-inline">{{ item.level }}</span>
+            {% if item.match_label %}
+            <span class="source-inline">{{ item.match_label }}</span>
+            {% endif %}
+          </div>
+          <h3>{% if item.url %}<a href="{{ item.url }}" target="_blank" rel="noreferrer">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}</h3>
+          {% if item.pmid %}
+          <p class="source-meta">{{ item.journal }} &middot; {{ item.year }} &middot; PMID {{ item.pmid }}{% if item.url %} &middot; <a class="source-open-link" href="{{ item.url }}" target="_blank" rel="noreferrer">Open source</a>{% endif %}</p>
+          {% endif %}
+          <div class="source-support-grid">
+            <p><strong>Why this source was selected:</strong> {{ item.summary }}</p>
+            <p><strong>What it supports:</strong> {{ item.supports }}</p>
+          </div>
+          <p class="muted">{{ item.limitation }}</p>
+        </article>
+        {% endfor %}
+      </div>
+      {% if analysis.additional_evidence_cards %}
+      <details class="inline-details">
+        <summary>Show additional visible source cards</summary>
+        <div class="candidate-list">
+          {% for item in analysis.additional_evidence_cards %}
+          <article class="source-card">
+            <strong>{% if item.url %}<a href="{{ item.url }}" target="_blank" rel="noreferrer">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}</strong>
+            <p>
+              <span class="source-inline">{{ item.level }}</span>
+              {% if item.match_label %}
+              <span class="source-inline">{{ item.match_label }}</span>
+              {% endif %}
+            </p>
+            {% if item.pmid %}
+            <p class="muted">{{ item.journal }} &middot; {{ item.year }} &middot; PMID {{ item.pmid }}{% if item.url %} &middot; <a class="source-open-link" href="{{ item.url }}" target="_blank" rel="noreferrer">Open source</a>{% endif %}</p>
+            {% endif %}
+            <p class="muted">{{ item.limitation }}</p>
+          </article>
+          {% endfor %}
+        </div>
+      </details>
+      {% endif %}
+      {% if analysis.background_evidence_cards %}
+      <details class="inline-details">
+        <summary>Show broad or low-relevance sources kept out of the main evidence list</summary>
+        <div class="candidate-list">
+          {% for item in analysis.background_evidence_cards %}
+          <article class="source-card">
+            <strong>{{ item.title }}</strong>
+            <p>
+              <span class="source-inline">{{ item.level }}</span>
+              {% if item.match_label %}
+              <span class="source-inline">{{ item.match_label }}</span>
+              {% endif %}
+            </p>
+            {% if item.pmid %}
+            <p class="muted">{{ item.journal }} &middot; {{ item.year }} &middot; PMID {{ item.pmid }}{% if item.url %} &middot; <a href="{{ item.url }}" target="_blank" rel="noreferrer">Open PubMed</a>{% endif %}</p>
+            {% endif %}
+            <p class="muted">{{ item.limitation }}</p>
+          </article>
+          {% endfor %}
+        </div>
+      </details>
+      {% endif %}
+    </div>
+  </details>
+
+  <details class="advanced-panel llm-panel">
+    <summary>4. Method, LLM and RAG transparency</summary>
+    <div class="advanced-panel-body">
+      <h3>How this text assessment was built</h3>
+      <ol class="clean-list numbered">
+        {% for item in analysis.explainability %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ol>
+      <h3>Language model and evidence controls</h3>
+      <div class="processing-summary-grid" aria-label="Processing summary">
+        <article>
+          <span>Evidence search used</span>
+          <strong>{% if analysis.evidence_pack.readiness and analysis.evidence_pack.readiness.ready %}Yes{% else %}No{% endif %}</strong>
+          <p>{% if analysis.evidence_pack.readiness and analysis.evidence_pack.readiness.ready %}The written intake was specific enough for PubMed context.{% else %}The evidence search was deferred because the intake was not specific enough.{% endif %}</p>
+        </article>
+        <article>
+          <span>Language model draft</span>
+          <strong>
+            {% if analysis.llm_context.status == "PASS" %}
+            Used
+            {% elif analysis.llm_context.llm_attempted %}
+            Checked, not displayed
+            {% else %}
+            Not run
+            {% endif %}
+          </strong>
+          <p>
+            {% if analysis.llm_context.status == "PASS" %}
+            The local medical language model drafted this section from structured data and sources.
+            {% elif analysis.llm_context.llm_attempted %}
+            A local model draft was attempted, but the app displayed the safer validated summary.
+            {% else %}
+            A controlled deterministic summary was used instead.
+            {% endif %}
+          </p>
+        </article>
+        <article>
+          <span>Safety check</span>
+          <strong>{% if analysis.llm_context.validation and analysis.llm_context.validation.verdict == "PASS" %}Passed{% else %}Protected{% endif %}</strong>
+          <p>{% if analysis.llm_context.validation and analysis.llm_context.validation.verdict == "PASS" %}The response passed the safety output rules.{% else %}Unsafe or incomplete model output is blocked before display.{% endif %}</p>
+        </article>
+      </div>
+      <div class="clinical-summary compact-summary">
+        <span class="priority-pill">{{ analysis.llm_context.display_metadata.label }}</span>
+        <p>{{ analysis.llm_context.display_metadata.note }}</p>
+      </div>
+      <article class="soft-panel">
+        <h3>Clinician-facing context</h3>
+        <p>{{ analysis.llm_context.display.clinician_context }}</p>
+      </article>
+      <div class="two-column">
+        <article class="soft-panel">
+          <h3>Evidence summary</h3>
+          <ul class="clean-list">
+            {% for item in analysis.llm_context.display.evidence_summary %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+        <article class="soft-panel">
+          <h3>Boundaries and limitations</h3>
+          <ul class="clean-list">
+            {% for item in analysis.llm_context.display.safety_boundaries %}
+            <li>{{ item }}</li>
+            {% endfor %}
+            {% for item in analysis.llm_context.display.limitations %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          {% if analysis.llm_context.display.source_pmids %}
+          <p class="source-inline">Used PMIDs: {{ analysis.llm_context.display.source_pmids|join(", ") }}</p>
+          {% endif %}
+        </article>
+      </div>
+    </div>
+  </details>
+  <details class="advanced-panel">
+    <summary>Review or edit submitted description</summary>
+    <div class="advanced-panel-body">
+      <form class="problem-form" action="/problem-description" method="post" data-problem-form>
+        <textarea
+          name="description"
+          rows="6"
+          required
+          placeholder="Describe the body area, specific location, mechanism, timing, symptoms, function, and warning signs."
+        >{{ description }}</textarea>
+        <button type="submit" data-problem-submit>Analyze updated description</button>
+        <div class="problem-loading-card" data-problem-loading aria-live="polite" aria-hidden="true">
+          <div class="problem-loading-topline">
+            <span class="loading-pulse"></span>
+            <div>
+              <strong>Building the clinical support response</strong>
+              <p data-problem-loading-message>Checking whether the description contains enough clinical context.</p>
+            </div>
+            <span class="problem-loading-percent" data-problem-loading-percent>0%</span>
+          </div>
+          <div class="problem-loading-track">
+            <span data-problem-loading-fill></span>
+          </div>
+          <div class="problem-loading-live">
+            <span class="loading-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span data-problem-loading-live>Starting review</span>
+          </div>
+          <ol class="problem-loading-steps" data-problem-loading-steps>
+            <li class="active">Reading details</li>
+            <li>Evidence search</li>
+            <li>Drafting response</li>
+            <li>Safety check</li>
+          </ol>
+        </div>
+      </form>
+    </div>
+  </details>
+</section>
+{% endif %}
+{% endblock %}
+

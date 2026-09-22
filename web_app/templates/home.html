@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}OrthoX Medical AI{% endblock %}
+{% block content %}
+<section class="home-shell">
+  <div class="intro">
+    <p class="eyebrow">Academic clinical-support prototype</p>
+    <div class="home-brand-lockup">
+      <img src="/static/img/orthox-logo.jpg" alt="OrthoX Medical AI logo">
+      <div>
+        <h1>OrthoX</h1>
+        <p>AI X-Ray review / Medical AI</p>
+      </div>
+    </div>
+    <p class="lead">
+      Welcome to OrthoX, an academic medical AI prototype for structured X-ray
+      review and injury-description support. The app brings together visual
+      review cues, anatomical context, safety checks, explainability, and
+      evidence-based management context in one workflow.
+    </p>
+    <div class="home-guidance" aria-label="How to use OrthoX">
+      <p>Choose the review path that matches the information you have:</p>
+      <ul>
+        <li>Use X-ray review when you want to upload or inspect an image-based case.</li>
+        <li>Use Problem Description when you only have written symptoms or injury context.</li>
+        <li>Use every result as decision support only; final interpretation remains with a clinician.</li>
+      </ul>
+    </div>
+    <p class="safety-note">
+      Not a diagnosis. Not a treatment plan. Human clinical review is required.
+    </p>
+  </div>
+  <div class="home-actions">
+    <a class="action-card primary" href="/review">
+      <span class="input-mode-label">Upload image</span>
+      <span class="action-title">Review an X-ray</span>
+      <span class="action-copy">Start from an X-ray image and receive a structured AI review with marked areas, model support, and safety context.</span>
+    </a>
+    <a class="action-card" href="/problem-description">
+      <span class="input-mode-label">Write text</span>
+      <span class="action-title">Problem description mode</span>
+      <span class="action-copy">Describe symptoms or injury context and receive structured, non-diagnostic clinical support with PubMed-linked evidence.</span>
+    </a>
+  </div>
+</section>
+{% endblock %}
