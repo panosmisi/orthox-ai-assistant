@@ -1,5 +1,7 @@
 # OrthoX
 
+Diploma thesis project developed by Panagiotis Misirlidis and Efstathios Pantos, Department of Electrical and Computer Engineering, University of Thessaly.
+
 OrthoX is the source-code package of the diploma thesis application for AI-assisted X-ray review support in orthopedics.
 
 The repository contains only the core implementation files that represent the final system. Datasets, trained model weights, experiment runs, temporary files, and old development artifacts are intentionally excluded.
